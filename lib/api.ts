@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://e-commerce-hnf5hxengjeeatfg.canadacentral-01.azurewebsites.net";
+  "https://e-commerce-hnf5hxengjeeatfg.canadacentral-01.azurewebsites.net/api";
 
 // Axios instance
 const axiosInstance = axios.create({

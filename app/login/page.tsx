@@ -7,31 +7,30 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/contexts/ToastContext'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-  const { showToast } = useToast()
+
+  const { login, error, clearError } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!email || !password) {
-      showToast('Please fill in all fields', 'error')
-      return
+      return // error will be set in AuthContext → will show below
     }
 
     setLoading(true)
+    clearError() // clear any previous error
+
     try {
       await login(email, password)
-      showToast('Login successful!', 'success')
       router.push('/')
-    } catch (error) {
-      showToast('Invalid email or password', 'error')
+    } catch {
+      // Error is already set inside AuthProvider → just let it display
     } finally {
       setLoading(false)
     }
@@ -44,6 +43,19 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-[#2C1810] mb-2">Welcome Back</h1>
           <p className="text-[#3E2723]">Sign in to your account</p>
         </div>
+
+        {/* Inline Error - Only change to your original design */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+            <button
+              onClick={clearError}
+              className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -76,7 +88,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
                 id="remember-me"
@@ -95,7 +107,7 @@ export default function LoginPage() {
             >
               Forgot password?
             </Link>
-          </div>
+          </div> */}
 
           <Button
             type="submit"
@@ -106,34 +118,6 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
-{/* 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-[#3E2723]">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => showToast('Social login coming soon!', 'info')}
-            >
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => showToast('Social login coming soon!', 'info')}
-            >
-              Facebook
-            </Button>
-          </div>
-        </div> */}
 
         <div className="mt-6 text-center">
           <p className="text-sm text-[#3E2723]">
