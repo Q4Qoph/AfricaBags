@@ -188,7 +188,7 @@ export function AddressModal({ open, onOpenChange, onSubmit }: AddressModalProps
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-gradient-warm hover:opacity-90">
+            <Button type="submit" className="flex-1 bg-[#C1502E] hover:bg-[#A0442A] ">
               Save Address
             </Button>
           </div>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -6,18 +6,24 @@ import {
   useState,
   useEffect,
   ReactNode,
-} from 'react';
-import { api } from '@/lib/api';
-import type { User } from '@/lib/types';
+} from "react";
+import { api } from "@/lib/api";
+import type { User } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  error: string | null;                // new
+  error: string | null; // new
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (data: {
+    // ← updated
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
-  clearError: () => void;                  // new – lets components clear the error
+  clearError: () => void; // new – lets components clear the error
   isAdmin: boolean;
 }
 
@@ -38,15 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function checkAuth() {
     clearError();
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem("auth_token");
       if (token) {
         const userData: any = await api.auth.getMe();
         setUser(userData.user as User);
       }
     } catch (err: any) {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem("auth_token");
       // You can customize the message based on the error if you want
-      setError(err?.response?.data?.message || 'Failed to authenticate');
+      setError(err?.response?.data?.message || "Failed to authenticate");
     } finally {
       setLoading(false);
     }
@@ -57,13 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const response: any = await api.auth.login({ email, password });
-      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem("auth_token", response.token);
       setUser(response.user);
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        'Login failed. Please check your credentials.';
+        "Login failed. Please check your credentials.";
       setError(message);
       throw err; // re-throw so forms can also catch it if they want
     } finally {
@@ -71,18 +77,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function register(email: string, password: string, name: string) {
+  async function register(data: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    password: string;
+  }) {
     clearError();
     setLoading(true);
     try {
-      const response: any = await api.auth.register({ email, password, name });
-      localStorage.setItem('auth_token', response.token);
+      const response: any = await api.auth.register({
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+      });
+
+      localStorage.setItem("auth_token", response.token);
       setUser(response.user);
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        'Registration failed. Try again.';
+        "Registration failed. Try again.";
       setError(message);
       throw err;
     } finally {
@@ -95,15 +112,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.auth.logout();
     } catch (err) {
-      // logout usually shouldn't fail critically
-      console.error('Logout error:', err);
+      console.error("Logout error:", err);
     } finally {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem("auth_token");
       setUser(null);
     }
   }
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
 
   return (
     <AuthContext.Provider
@@ -126,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

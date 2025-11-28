@@ -172,15 +172,43 @@ export default function ShopPage() {
 
         {/* Search and Sort */}
         <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 max-w-md">
+          <div className="relative w-full max-w-md">
             <Input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className="w-full pl-10 pr-10 h-10 rounded-md border border-gray-300 bg-white
+               focus:ring-2 focus:ring-[#C1502E] focus:border-[#C1502E] text-sm"
             />
+
+            {/* Search Icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-4.35-4.35m1.6-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+
+            {/* Clear Button */}
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            )}
           </div>
+
           <div className="flex gap-4 items-center">
             <Button
               variant="outline"
@@ -219,7 +247,7 @@ export default function ShopPage() {
                 <p className="text-[#3E2723] text-lg mb-4">
                   No products found matching your criteria
                 </p>
-                <Button onClick={clearFilters}>Clear Filters</Button>
+                <Button className="bg-[#C1502E] hover:bg-[#A0442A]" onClick={clearFilters}>Clear Filters</Button>
               </div>
             ) : (
               <>
@@ -241,15 +269,22 @@ export default function ShopPage() {
                         className="overflow-hidden hover:shadow-lg transition-shadow py-0"
                       >
                         <div className="aspect-square relative bg-green-800">
-                          <Image
-                            src={
-                              product.images[0]?.imageUrl || "/placeholder.jpg"
-                            }
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+                          <Link
+                            href={`/products/${product.slug}`}
+                            key={product.id}
+                          >
+                            <Image
+                              src={
+                                product.images[0]?.imageUrl ||
+                                "/placeholder.jpg"
+                              }
+                              alt={product.name}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </Link>
+
                           {isFeatured && (
                             <div className="absolute top-3 left-3">
                               <Badge variant="secondary">Featured</Badge>
@@ -287,7 +322,10 @@ export default function ShopPage() {
                               Ksh {price.toFixed(2)}
                             </span>
                             <Link href={`/products/${product.slug}`}>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                className="bg-[#C1502E] hover:bg-[#A0442A] cursor-pointer"
+                                size="sm"
+                              >
                                 View Details
                               </Button>
                             </Link>

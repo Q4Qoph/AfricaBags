@@ -43,8 +43,9 @@ export default function CartPage() {
   const itemCount = cartSummary?.itemCount || cartItems.length;
 
   const shipping = subtotal >= 100 ? 0 : 10;
-  const tax = (subtotal + shipping) * 0.1;
-  const grandTotal = subtotal + shipping + tax;
+  // const tax = (subtotal + shipping) * 0.1;
+  // const grandTotal = subtotal + shipping + tax;
+  const grandTotal = subtotal;
 
   // Redirect if not logged in
   if (!authLoading && !user) {
@@ -289,7 +290,7 @@ export default function CartPage() {
                     <span className="text-[#3E2723]">Subtotal</span>
                     <span className="font-medium">${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  {/* <div className="flex justify-between">
                     <span className="text-[#3E2723]">Shipping</span>
                     <span
                       className={
@@ -298,11 +299,11 @@ export default function CartPage() {
                     >
                       {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
+                  </div> */}
+                  {/* <div className="flex justify-between">
                     <span className="text-[#3E2723]">Tax</span>
                     <span>${tax.toFixed(2)}</span>
-                  </div>
+                  </div> */}
 
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-2xl font-bold">
@@ -313,14 +314,14 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  {subtotal < 100 && (
+                  {/* {subtotal < 100 && (
                     <div className="mt-6 p-4 bg-[#D4A574]/20 rounded-lg text-center">
                       <p className="text-sm font-medium text-[#2C1810]">
                         Add ${(100 - subtotal).toFixed(2)} more for{" "}
                         <span className="text-green-600">FREE shipping</span>!
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 <Button

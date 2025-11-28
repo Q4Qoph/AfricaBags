@@ -1,3 +1,4 @@
+// app/checkout/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,40 +11,34 @@ import { PageLoading } from "@/components/ui/Loading";
 import { useCart, useAddresses, useOrders } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { MapPin, Receipt, ArrowLeft, CheckCircle } from "lucide-react";
+import { MapPin, Receipt, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
+
+import { AddressModal, type AddressFormData } from "@/components/AddressModal";
 
 export default function CheckoutPage() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
-  );
-
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
 
   const { data: cartData, isLoading: loadingCart } = useCart.get();
-  const { data: addressesData, isLoading: loadingAddresses } =
-    useAddresses.all();
+  const { data: addressesData, isLoading: loadingAddresses, refetch: refetchAddresses } = useAddresses.all();
   const { mutate: createOrder, isPending: creatingOrder } = useOrders.create();
+  const { mutate: createAddress, isPending: creatingAddress } = useAddresses.create();
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const cartItems = cartData?.cart || [];
   const addresses = addressesData?.addresses || [];
-  const selectedAddress = addresses.find(
-    (a: any) => a.id === selectedAddressId
-  );
+  const selectedAddress = addresses.find((a: any) => a.id === selectedAddressId);
 
-  const subtotal = cartItems.reduce(
-    (sum: number, item: any) => sum + item.subtotal,
-    0
-  );
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
+  const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.subtotal, 0);
+  const total = subtotal;
 
   useEffect(() => {
     if (addresses.length > 0 && !selectedAddressId) {
-      const defaultAddr =
-        addresses.find((a: any) => a.isDefault) || addresses[0];
+      const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
       setSelectedAddressId(defaultAddr.id);
     }
   }, [addresses, selectedAddressId]);
@@ -52,13 +47,34 @@ export default function CheckoutPage() {
     router.replace("/login");
     return null;
   }
-
   if (loadingCart || loadingAddresses) return <PageLoading />;
-
   if (!cartItems.length) {
     router.replace("/cart");
     return null;
   }
+
+  // This sends the EXACT same field names your form uses
+  const handleSaveAddress = (formData: AddressFormData) => {
+    createAddress(
+      {
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2 || null,
+        city: formData.city,
+        state: formData.state || null,
+        country: formData.country,
+        postalCode: formData.postalCode || null,
+        isDefault: formData.isDefault,
+      },
+      {
+        onSuccess: () => {
+          showToast("Address added successfully!", "success");
+          refetchAddresses();
+          setIsAddressModalOpen(false);
+        },
+        onError: () => showToast("Failed to save address", "error"),
+      }
+    );
+  };
 
   const handleCreateOrder = () => {
     if (!selectedAddress) {
@@ -67,14 +83,11 @@ export default function CheckoutPage() {
     }
 
     createOrder(
-      { addressId: selectedAddress.id }, // or shippingAddressId — whatever your backend expects
+      { addressId: selectedAddress.id },
       {
-        onSuccess: (order: any) => {
-          showToast(
-            "Order created successfully! Redirecting to payment...",
-            "success"
-          );
-          router.push("/orders"); // This is where they will pay
+        onSuccess: () => {
+          showToast("Order created successfully!", "success");
+          router.push("/orders");
         },
         onError: () => showToast("Failed to create order", "error"),
       }
@@ -86,35 +99,36 @@ export default function CheckoutPage() {
     { number: 2, name: "Review", icon: Receipt },
   ];
 
+  // Helper to format address for display
+  const formatAddress = (addr: any) => {
+    const line2 = addr.addressLine2 ? `, ${addr.addressLine2}` : "";
+    const state = addr.state ? `, ${addr.state}` : "";
+    const postal = addr.postalCode ? ` ${addr.postalCode}` : "";
+    return `${addr.addressLine1}${line2}, ${addr.city}${state}, ${addr.country || "Kenya"}${postal}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF6F1]">
-      {" "}
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {" "}
-        {/* Header */}{" "}
+        {/* Header + Progress */}
         <div className="mb-10">
-          {" "}
           <div className="flex items-center gap-4 mb-8">
-            {" "}
-            <button
-              onClick={() => router.back()}
-              className="p-3 rounded-full hover:bg-white/60 transition"
-            >
-              {" "}
-              <ArrowLeft className="w-6 h-6 text-[#2C1810]" />{" "}
-            </button>{" "}
-            <h1 className="text-4xl font-bold text-[#2C1810]">Checkout</h1>{" "}
+            <button onClick={() => router.back()} className="p-3 rounded-full hover:bg-white/60 transition">
+              <ArrowLeft className="w-6 h-6 text-[#2C1810]" />
+            </button>
+            <h1 className="text-4xl font-bold text-[#2C1810]">Checkout</h1>
           </div>
-          {/* Progress */}
+
           <div className="flex items-center justify-center gap-16">
             {steps.map((step, i) => {
               const Icon = step.icon;
               const active = step.number === currentStep;
               const done = step.number < currentStep;
+
               return (
                 <div key={step.number} className="flex items-center">
                   <div
-                    className={`flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-lg ${
+                    className={`flex items-center gap-3 px-8 py-4 rounded-full font-semibold text-lg transition-all ${
                       active
                         ? "bg-[#C1502E] text-white"
                         : done
@@ -122,26 +136,19 @@ export default function CheckoutPage() {
                         : "bg-white text-[#3E2723]"
                     }`}
                   >
-                    {done ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <Icon className="w-6 h-6" />
-                    )}
+                    {done ? <CheckCircle className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                     <span className="hidden sm:inline">{step.name}</span>
                     <span className="sm:hidden">{step.number}</span>
                   </div>
                   {i < steps.length - 1 && (
-                    <div
-                      className={`w-40 h-1.5 ${
-                        done ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
+                    <div className={`w-40 h-1.5 ${done ? "bg-green-500" : "bg-gray-300"}`} />
                   )}
                 </div>
               );
             })}
           </div>
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main Content */}
           <div className="lg:col-span-2">
@@ -154,6 +161,7 @@ export default function CheckoutPage() {
                       <MapPin className="w-8 h-8" /> Delivery Address
                     </CardTitle>
                   </CardHeader>
+
                   <CardContent className="px-0 mt-8 space-y-5">
                     {addresses.map((addr: any) => (
                       <div
@@ -166,21 +174,14 @@ export default function CheckoutPage() {
                         }`}
                       >
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="flex-1">
                             <p className="text-xl font-bold text-[#2C1810]">
-                              {addr.fullName}
+                              {addr.addressLine1}
                             </p>
-                            <p className="text-[#3E2723] mt-2">
-                              {addr.street}
-                              <br />
-                              {addr.city}, Kenya
+                            <p className="text-[#3E2723] mt-1 text-sm leading-relaxed">
+                              {formatAddress(addr)}
                             </p>
-                            <p className="mt-2 text-[#3E2723]">
-                              Phone: {addr.phone}
-                            </p>
-                            {addr.isDefault && (
-                              <Badge className="mt-4">Default Address</Badge>
-                            )}
+                            {addr.isDefault && <Badge className="mt-3">Default Address</Badge>}
                           </div>
                           <div
                             className={`w-7 h-7 rounded-full border-4 ${
@@ -195,10 +196,18 @@ export default function CheckoutPage() {
 
                     <Button
                       variant="outline"
-                      className="w-full h-16 text-xl"
-                      onClick={() => router.push("/profile?tab=addresses")}
+                      className="w-full h-16 text-xl font-medium"
+                      onClick={() => setIsAddressModalOpen(true)}
+                      disabled={creatingAddress}
                     >
-                      + Add New Address
+                      {creatingAddress ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Saving Address...
+                        </>
+                      ) : (
+                        "+ Add New Address"
+                      )}
                     </Button>
                   </CardContent>
                 </div>
@@ -209,26 +218,17 @@ export default function CheckoutPage() {
                 <div>
                   <CardHeader className="px-0 pt-0">
                     <CardTitle className="flex items-center gap-3 text-3xl text-[#2C1810]">
-                      <Receipt className="w-8 h-8 " /> Review Your Order
+                      <Receipt className="w-8 h-8" /> Review Your Order
                     </CardTitle>
                   </CardHeader>
+
                   <CardContent className="px-0 mt-8 space-y-8">
                     <div>
-                      <h3 className="text-xl font-bold mb-4">
-                        Delivery Address
-                      </h3>
+                      <h3 className="text-xl font-bold mb-4">Delivery Address</h3>
                       <div className="bg-gray-50 p-6 rounded-xl">
-                        <p className="font-bold text-lg">
-                          {selectedAddress?.fullName}
-                        </p>
-                        <p className="text-[#3E2723] mt-1">
-                          {selectedAddress?.street}
-                        </p>
-                        <p className="text-[#3E2723]">
-                          {selectedAddress?.city}, Kenya
-                        </p>
-                        <p className="text-[#3E2723] mt-2">
-                          Phone: {selectedAddress?.phone}
+                        <p className="font-bold text-lg">{selectedAddress?.addressLine1}</p>
+                        <p className="text-[#3E2723] mt-1 text-sm leading-relaxed">
+                          {formatAddress(selectedAddress)}
                         </p>
                       </div>
                     </div>
@@ -237,27 +237,24 @@ export default function CheckoutPage() {
                       <h3 className="text-xl font-bold mb-4">Order Items</h3>
                       <div className="space-y-4">
                         {cartItems.map((item: any) => (
-                          <div
-                            key={item.id}
-                            className="flex gap-4 items-center"
-                          >
-                            <div className="w-20 h-20 rounded-xl overflow-hidden bg-white">
-                              {/* <Image
-                                src={item.product.image || "/placeholder.jpg"}
-                                alt=""
-                                fill
-                                className="object-cover"
-                              /> */}
+                          <div key={item.id} className="flex gap-4 items-center">
+                            <div className="w-20 h-20 rounded-xl overflow-hidden bg-white relative">
+                              {item.product.image ? (
+                                <Image
+                                  src={item.product.image}
+                                  alt={item.product.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="bg-gray-200 w-full h-full" />
+                              )}
                             </div>
                             <div className="flex-1">
                               <p className="font-medium">{item.product.name}</p>
-                              <p className="text-sm text-[#3E2723]">
-                                Qty: {item.quantity}
-                              </p>
+                              <p className="text-sm text-[#3E2723]">Qty: {item.quantity}</p>
                             </div>
-                            <p className="font-bold">
-                              KSh {item.subtotal.toFixed(2)}
-                            </p>
+                            <p className="font-bold">KSh {item.subtotal.toFixed(2)}</p>
                           </div>
                         ))}
                       </div>
@@ -280,6 +277,7 @@ export default function CheckoutPage() {
                 {currentStep === 1 ? (
                   <Button
                     size="lg"
+                    disabled={!selectedAddress}
                     onClick={() => setCurrentStep(2)}
                     className="px-12 bg-[#C1502E] hover:bg-[#A0442A]"
                   >
@@ -292,16 +290,21 @@ export default function CheckoutPage() {
                     disabled={creatingOrder}
                     className="px-16 text-xl font-bold bg-[#C1502E] hover:bg-[#A0442A]"
                   >
-                    {creatingOrder
-                      ? "Creating Order..."
-                      : `Create Order – KSh ${total.toFixed(2)}`}
+                    {creatingOrder ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Creating Order...
+                      </>
+                    ) : (
+                      `Create Order – KSh ${total.toFixed(2)}`
+                    )}
                   </Button>
                 )}
               </div>
             </Card>
           </div>
 
-          {/* Summary */}
+          {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="p-8 sticky top-24">
               <CardTitle className="text-2xl mb-6">Order Summary</CardTitle>
@@ -311,9 +314,7 @@ export default function CheckoutPage() {
                     <span className="text-[#3E2723]">
                       {item.product.name} × {item.quantity}
                     </span>
-                    <span className="font-medium">
-                      KSh {item.subtotal.toFixed(2)}
-                    </span>
+                    <span className="font-medium">KSh {item.subtotal.toFixed(2)}</span>
                   </div>
                 ))}
 
@@ -321,10 +322,6 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-lg">
                     <span>Subtotal</span>
                     <span>KSh {subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg">
-                    <span>Tax</span>
-                    <span>KSh {tax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-2xl font-bold pt-6 border-t text-[#C1502E]">
                     <span>Total</span>
@@ -335,6 +332,13 @@ export default function CheckoutPage() {
             </Card>
           </div>
         </div>
+
+        {/* Your EXACT AddressModal — 100% untouched */}
+        <AddressModal
+          open={isAddressModalOpen}
+          onOpenChange={setIsAddressModalOpen}
+          onSubmit={handleSaveAddress}
+        />
       </div>
     </div>
   );
