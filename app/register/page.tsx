@@ -1,76 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
+    phoneNumber: "",
     password: "",
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
-  const { showToast } = useToast();
+
+  const { register, error, clearError } = useAuth(); // ← use error from context
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const fullNameRef = useRef<HTMLInputElement>(null);
+  useEffect(() => fullNameRef.current?.focus(), []);
 
-  const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
-      showToast("Please fill in all fields", "error");
-      return false;
-    }
-
-    if (formData.password.length < 8) {
-      showToast("Password must be at least 8 characters long", "error");
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      showToast("Passwords do not match", "error");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      showToast("Please enter a valid email address", "error");
-      return false;
-    }
-
-    return true;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError(); // clear previous error
 
-    if (!validateForm()) return;
+    if (
+      !formData.fullName ||
+      !formData.email ||
+      !formData.phoneNumber ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      return;
+    }
 
     setLoading(true);
+
     try {
-      await register(formData.name, formData.email, formData.password);
-      showToast("Account created successfully!", "success");
+      await register({
+        fullName: formData.fullName.trim(),
+        email: formData.email.toLowerCase().trim(),
+        phoneNumber: formData.phoneNumber.replace(/\s/g, ""),
+        password: formData.password,
+      });
+
       router.push("/");
-    } catch (error: any) {
-      showToast(error.message || "Failed to create account", "error");
+    } catch {
+      // Error is already set in AuthContext → just let it display below
     } finally {
       setLoading(false);
     }
@@ -86,23 +74,37 @@ export default function RegisterPage() {
           <p className="text-[#3E2723]">Join our crafting community</p>
         </div>
 
+        {/* Inline Error – same style as Login */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+            <button
+              onClick={clearError}
+              className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
-              htmlFor="name"
+              htmlFor="fullName"
               className="block text-sm font-medium text-[#2C1810] mb-2"
             >
               Full Name
             </label>
             <Input
-              id="name"
-              name="name"
+              ref={fullNameRef}
+              id="fullName"
+              name="fullName"
               type="text"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Enter your full name"
-              className="w-full"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="John Doe"
               disabled={loading}
+              required
             />
           </div>
 
@@ -118,10 +120,29 @@ export default function RegisterPage() {
               name="email"
               type="email"
               value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Enter your email"
-              className="w-full"
+              onChange={handleChange}
+              placeholder="you@example.com"
               disabled={loading}
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="phoneNumber"
+              className="block text-sm font-medium text-[#2C1810] mb-2"
+            >
+              Phone Number
+            </label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              placeholder="+254712345678"
+              disabled={loading}
+              required
             />
           </div>
 
@@ -137,10 +158,11 @@ export default function RegisterPage() {
               name="password"
               type="password"
               value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Create a password (min. 8 characters)"
-              className="w-full"
+              onChange={handleChange}
+              placeholder="Min. 8 characters"
               disabled={loading}
+              minLength={8}
+              required
             />
           </div>
 
@@ -156,86 +178,57 @@ export default function RegisterPage() {
               name="confirmPassword"
               type="password"
               value={formData.confirmPassword}
-              onChange={handleInputChange}
-              placeholder="Confirm your password"
-              className="w-full"
+              onChange={handleChange}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
+              placeholder="Confirm password"
               disabled={loading}
+              required
             />
           </div>
 
           <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-[#C1502E] focus:ring-[#C1502E]"
-                required
-              />
-            </div>
-            <div className="ml-3 text-sm">
-              <label htmlFor="terms" className="text-[#3E2723]">
-                I agree to the{" "}
-                <Link
-                  href="/terms"
-                  className="text-[#C1502E] hover:text-[#A0421F] font-medium"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="text-[#C1502E] hover:text-[#A0421F] font-medium"
-                >
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
+            <input
+              id="terms"
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-[#C1502E] focus:ring-[#C1502E] mt-0.5"
+              required
+            />
+            <label htmlFor="terms" className="ml-3 text-sm text-[#3E2723]">
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                className="text-[#C1502E] hover:text-[#A0421F] font-medium"
+              >
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="text-[#C1502E] hover:text-[#A0421F] font-medium"
+              >
+                Privacy Policy
+              </Link>
+            </label>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading} size="lg">
-            {loading ? "Creating account..." : "Create Account"}
+          <Button
+            type="submit"
+            className="w-full h-11 text-base font-medium bg-[#C1502E] hover:bg-[#A0421F]"
+            disabled={loading}
+            size="lg"
+          >
+            {loading ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
 
-        {/* <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-[#3E2723]">Or sign up with</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => showToast('Social registration coming soon!', 'info')}
-            >
-              Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => showToast('Social registration coming soon!', 'info')}
-            >
-              Facebook
-            </Button>
-          </div>
-        </div> */}
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-[#3E2723]">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-[#C1502E] hover:text-[#A0421F]"
-            >
-              Sign in
-            </Link>
-          </p>
+        <div className="mt-6 text-center text-sm text-[#3E2723]">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-medium text-[#C1502E] hover:text-[#A0421F]"
+          >
+            Sign in
+          </Link>
         </div>
       </Card>
     </div>

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://e-commerce-hnf5hxengjeeatfg.canadacentral-01.azurewebsites.net";
+  "https://e-commerce-hnf5hxengjeeatfg.canadacentral-01.azurewebsites.net/api";
 
 // Axios instance
 const axiosInstance = axios.create({
@@ -74,8 +74,18 @@ export const queryKeys = {
 // API functions
 export const api = {
   auth: {
-    register: (data: { email: string; password: string; name: string }) =>
-      axiosInstance.post("/auth/register", data),
+    register: (data: {
+      fullName: string;
+      email: string;
+      phoneNumber: string;
+      password: string;
+    }) =>
+      axiosInstance.post("/auth/register", {
+        fullName: data.fullName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+      }),
     login: (data: { email: string; password: string }) =>
       axiosInstance.post("/auth/login", data),
     logout: () => axiosInstance.post("/auth/logout"),
@@ -160,7 +170,7 @@ export const api = {
   },
   payments: {
     mpesa: {
-      initiate: (data: { phone: string; orderId: any }) =>
+      initiate: (data: { phoneNumber: string; orderId: any }) =>
         axiosInstance.post("/payments/mpesa/initiate", data),
       getStatus: (checkoutRequestId: string) =>
         axiosInstance.get(`/payments/mpesa/status/${checkoutRequestId}`),

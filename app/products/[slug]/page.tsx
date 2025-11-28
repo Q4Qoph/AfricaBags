@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProducts, useReviews, useCart, useWishlist } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
+import ProductReviews from "./(components)/ProductReviews";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -23,14 +24,13 @@ export default function ProductDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  // Fetch product by slug → response: { product: Product }
   const {
     data: productData,
     isLoading: loadingProduct,
     error: productError,
   } = useProducts.bySlug(slug);
 
-  const product = productData?.product; // ← This is the key fix
+  const product = productData?.product; 
 
   // Reviews → response: Review[]
   const { data: reviews = [], isLoading: loadingReviews } =
@@ -325,7 +325,7 @@ export default function ProductDetailPage() {
 
               <div className="flex gap-4">
                 <Button
-                  className="flex-1 bg-[#8B4513]"
+                  className="flex-1 bg-[#C1502E] hover:bg-[#A0442A]"
                   size="lg"
                   onClick={handleAddToCart}
                   disabled={stock === 0 || addingToCart}
@@ -351,7 +351,7 @@ export default function ProductDetailPage() {
             <div className="text-sm text-[#3E2723] space-y-2">
               <div className="flex items-center gap-2">
                 <span>✓</span>
-                 Free shipping on orders over $100
+                Free shipping on orders over $100
               </div>
               <div className="flex items-center gap-2">
                 <span>✓</span>
@@ -370,59 +370,9 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Reviews Section */}
-        <div className="mb-16">
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold text-[#2C1810] mb-6">
-              Customer Reviews
-            </h2>
-            {loadingReviews ? (
-              <p className="text-[#3E2723]">Loading reviews...</p>
-            ) : reviews.length > 0 ? (
-              <div className="space-y-6">
-                {reviews.slice(0, 5).map((review: any) => (
-                  <div
-                    key={review.id}
-                    className="border-b pb-6 last:border-b-0"
-                  >
-                    <div className="flex justify-between mb-2">
-                      <div>
-                        <span className="font-medium text-[#2C1810]">
-                          {review.userName || "Anonymous"}
-                        </span>
-                        {review.verifiedPurchase && (
-                          <Badge className="ml-2 bg-green-100 text-green-700">
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex">
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <span
-                            key={i}
-                            className={
-                              i < review.rating
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                            }
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-[#3E2723]">{review.comment}</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[#3E2723]">
-                No reviews yet. Be the first to review this product!
-              </p>
-            )}
-          </Card>
+        {/* Reviews Section */}
+        <div className="mb-20">
+          <ProductReviews productId={product.id} />
         </div>
 
         {/* Related Products */}

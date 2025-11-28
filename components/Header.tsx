@@ -13,7 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCart, useWishlist } from "@/lib/api"; // Your React Query hooks
+import { useCart, useWishlist } from "@/lib/api";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -123,17 +123,21 @@ export default function Header() {
                 {isUserDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                     <div className="py-3 px-4 bg-[#FAF6F1] border-b">
-                      <p className="text-sm font-medium text-[#3E2723]">Hello,</p>
-                      <p className="text-base font-semibold text-[#2C1810]">{user.name}</p>
+                      <p className="text-sm font-medium text-[#3E2723]">
+                        Hello,
+                      </p>
+                      <p className="text-base font-semibold text-[#2C1810]">
+                        {user.fullName}
+                      </p>
                     </div>
                     <div className="py-2">
-                      <Link
+                      {/* <Link
                         href="/profile"
                         className="block px-4 py-2.5 text-sm text-[#3E2723] hover:bg-[#FAF6F1] transition-colors"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         Profile
-                      </Link>
+                      </Link> */}
                       <Link
                         href="/orders"
                         className="block px-4 py-2.5 text-sm text-[#3E2723] hover:bg-[#FAF6F1] transition-colors"
@@ -178,7 +182,11 @@ export default function Header() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
 
@@ -246,15 +254,16 @@ export default function Header() {
                 </Link>
 
                 {user ? (
-                  <Link
-                    href="/profile"
-                    className="flex flex-col items-center text-[#3E2723] hover:text-[#C1502E]"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <User className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Profile</span>
-                  </Link>
+                  <></>
                 ) : (
+                  // <Link
+                  //   href="/profile"
+                  //   className="flex flex-col items-center text-[#3E2723] hover:text-[#C1502E]"
+                  //   onClick={() => setIsMobileMenuOpen(false)}
+                  // >
+                  //   <User className="h-6 w-6 mb-1" />
+                  //   <span className="text-xs">Profile</span>
+                  // </Link>
                   <Link
                     href="/login"
                     className="flex flex-col items-center text-[#3E2723] hover:text-[#C1502E]"
@@ -270,7 +279,7 @@ export default function Header() {
               {user && (
                 <div className="mt-6 pt-6 border-t border-[#D4A574]">
                   <p className="px-4 text-sm font-medium text-[#3E2723] mb-3">
-                    Hello, {user.name}
+                    Hello, {user.fullName}
                   </p>
                   <Link
                     href="/orders"
