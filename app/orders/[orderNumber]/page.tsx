@@ -55,7 +55,7 @@ export default function OrderDetailPage() {
     }
 
     initiateMpesa(
-      { orderId: order.id, phone: cleanPhone },
+      { orderId: order.id, phoneNumber: cleanPhone },
       {
         onSuccess: () => showToast('M-Pesa prompt sent! Check your phone', 'success'),
         onError: () => showToast('Payment failed', 'error'),

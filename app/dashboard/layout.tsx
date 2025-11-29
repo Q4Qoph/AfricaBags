@@ -145,7 +145,7 @@ export default function DashboardLayout({
                 </span>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-[#2C1810]">{user.name}</p>
+                <p className="text-sm font-medium text-[#2C1810]">{user.fullName}</p>
                 <p className="text-xs text-[#8B6F47]">{user.email}</p>
               </div>
             </div>

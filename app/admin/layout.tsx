@@ -149,12 +149,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <div className="flex items-center space-x-3 px-2">
                     <Avatar className="h-12 w-12 ring-4 ring-white shadow-lg">
                       <AvatarFallback className="bg-[#8B4513] text-white font-bold text-lg">
-                        {user.name?.charAt(0).toUpperCase() || "A"}
+                        {user.fullName?.charAt(0).toUpperCase() || "A"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 truncate">
-                        {user.name || "Admin"}
+                        {user.fullName || "Admin"}
                       </p>
                       <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>

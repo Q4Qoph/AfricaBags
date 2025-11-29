@@ -63,12 +63,8 @@ export default function ProductDetailPage() {
       : product?.price || 0;
   const category = product?.bagType || product?.category || "Product";
   const colors = product?.color ? [product.color] : product?.colors || [];
-  const averageRating =
-    reviews.length > 0
-      ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
-        reviews.length
-      : parseFloat(product?.averageRating || "0");
-  const totalReviews = product?.reviewCount || reviews.length;
+  const averageRating = Number(product?.averageRating) || 0;
+  const totalReviews = Number(product?.reviewCount )|| reviews.length;
 
   // Handlers
   const handleAddToCart = () => {

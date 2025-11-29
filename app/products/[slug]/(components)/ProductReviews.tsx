@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useReviews } from "@/lib/api";
 import { Star } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProductReviewsProps {
   productId: string;
@@ -22,6 +23,8 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -48,6 +51,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
           setComment("");
           setRating(0);
           refetch();
+          queryClient.invalidateQueries({
+            queryKey: ["product", productId],
+          });
         },
         onError: () => showToast("Failed to submit review", "error"),
         onSettled: () => setSubmitting(false),
@@ -66,7 +72,6 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
   return (
     <Card className="p-6 md:p-8 border-0 shadow-lg bg-white/95">
-
       {/* ---------- HEADER ---------- */}
       <h2 className="text-2xl md:text-3xl font-bold text-[#2C1810] mb-8">
         Customer Reviews
@@ -110,7 +115,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
           {/* Star Rating */}
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-3">Your Rating</label>
+            <label className="block text-sm font-medium mb-3">
+              Your Rating
+            </label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -158,7 +165,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
         ) : reviews.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-xl font-medium">No reviews yet</p>
-            <p className="text-sm text-gray-500 mt-2">Be the first to review!</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Be the first to review!
+            </p>
           </div>
         ) : (
           reviews.map((review: any) => (

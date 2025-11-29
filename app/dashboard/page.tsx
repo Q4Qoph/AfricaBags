@@ -122,7 +122,7 @@ export default function DashboardPage() {
       {/* Welcome */}
       <div>
         <h1 className="text-3xl font-bold text-[#2C1810] mb-2">
-          Welcome back, {user?.name?.split(" ")[0] || "there"}!
+          Welcome back, {user?.fullName?.split(" ")[0] || "there"}!
         </h1>
         <p className="text-[#8B6F47]">
           Here's what's happening with your account today.
