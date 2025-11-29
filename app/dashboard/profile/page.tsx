@@ -21,7 +21,7 @@ export default function ProfilePage() {
   });
 
   const [profileForm, setProfileForm] = useState({
-    name: user?.name || "",
+    name: user?.fullName || "",
     email: user?.email || "",
   });
 

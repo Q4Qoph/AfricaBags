@@ -211,7 +211,7 @@ export default function OrdersPage() {
       {
         onSuccess: (res: any) =>
           (window.location.href =
-            res.paymentUrl || `/payment/crypto/${res.chargeId}`),
+            res.invoiceUrl!),
         onError: (error: any) => {
           setPaymentError((prev) => ({
             ...prev,
